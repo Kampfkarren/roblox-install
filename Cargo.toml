@@ -1,0 +1,11 @@
+[package]
+name = "roblox_install"
+version = "0.1.0"
+authors = ["Kampfkarren <kampfkarren@gmail.com>"]
+license = "MPL-2.0"
+repository = "https://github.com/Kampfkarren/roblox-install"
+keywords = ["roblox"]
+edition = "2018"
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.6"
