@@ -12,6 +12,7 @@ pub enum Error {
     RegistryError(io::Error),
 }
 
+#[derive(Debug)]
 #[must_use]
 pub struct RobloxStudio {
     root: PathBuf,
