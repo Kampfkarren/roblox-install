@@ -1,4 +1,7 @@
-use std::{io, path::PathBuf};
+use std::{
+    io,
+    path::{Path, PathBuf},
+};
 
 #[cfg(target_os = "windows")]
 use winreg::RegKey;
@@ -42,16 +45,25 @@ impl RobloxStudio {
     }
 
     #[cfg(not(target_os = "windows"))]
+    #[inline]
     pub fn locate() -> Result<RobloxStudio> {
         Err(Error::PlatformNotSupported)
     }
 
     #[must_use]
+    #[inline]
+    pub fn root(&self) -> &Path {
+        &self.root
+    }
+
+    #[must_use]
+    #[inline]
     pub fn exe_path(&self) -> PathBuf {
         self.root.join("RobloxStudioBeta.exe")
     }
 
     #[must_use]
+    #[inline]
     pub fn built_in_plugins_path(&self) -> PathBuf {
         self.root.join("BuiltInPlugins")
     }
