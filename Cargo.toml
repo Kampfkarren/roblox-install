@@ -1,5 +1,6 @@
 [package]
 name = "roblox_install"
+description = "Get the install directory of Roblox in code"
 version = "0.1.0"
 authors = ["Kampfkarren <kampfkarren@gmail.com>"]
 license = "MPL-2.0"
