@@ -52,7 +52,7 @@ impl RobloxStudio {
 
     #[must_use]
     #[inline]
-    pub fn root(&self) -> &Path {
+    pub fn root_path(&self) -> &Path {
         &self.root
     }
 

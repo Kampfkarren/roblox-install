@@ -6,7 +6,7 @@ fn test_windows() {
     let studio = RobloxStudio::locate().unwrap();
 
 	assert!(studio
-        .root()
+        .root_path()
         .to_string_lossy()
         .contains("Roblox"));
 
