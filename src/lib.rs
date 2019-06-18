@@ -25,6 +25,16 @@ impl fmt::Display for Error {
     }
 }
 
+impl std::error::Error for Error {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        if let Error::RegistryError(error) = self {
+            Some(error)
+        } else {
+            None
+        }
+    }
+}
+
 #[derive(Debug)]
 #[must_use]
 pub struct RobloxStudio {
