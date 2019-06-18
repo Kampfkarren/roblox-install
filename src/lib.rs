@@ -1,5 +1,5 @@
 use std::{
-    io,
+    fmt, io,
     path::{Path, PathBuf},
 };
 
@@ -13,6 +13,16 @@ pub enum Error {
     MalformedRegistry,
     PlatformNotSupported,
     RegistryError(io::Error),
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Error::MalformedRegistry => write!(formatter, "The values of the registry keys used to find Roblox are malformed, maybe your Roblox installation is corrupt?"),
+            Error::PlatformNotSupported => write!(formatter, "Your platform is not currently supported"),
+            Error::RegistryError(error) => write!(formatter, "Couldn't find registry keys, Roblox might not be installed. ({})", error),
+        }
+    }
 }
 
 #[derive(Debug)]

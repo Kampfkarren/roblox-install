@@ -5,10 +5,7 @@ use roblox_install::RobloxStudio;
 fn test_windows() {
     let studio = RobloxStudio::locate().unwrap();
 
-	assert!(studio
-        .root_path()
-        .to_string_lossy()
-        .contains("Roblox"));
+    assert!(studio.root_path().to_string_lossy().contains("Roblox"));
 
     assert!(studio
         .built_in_plugins_path()
