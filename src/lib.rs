@@ -39,6 +39,7 @@ impl std::error::Error for Error {
 #[must_use]
 pub struct RobloxStudio {
     root: PathBuf,
+    plugins: PathBuf,
 }
 
 impl RobloxStudio {
@@ -56,11 +57,16 @@ impl RobloxStudio {
 
         let content_folder_path = PathBuf::from(content_folder_value);
 
+        let root = content_folder_path.parent()
+            .ok_or(Error::MalformedRegistry)?;
+
+        let plugins = root.parent()
+            .ok_or(Error::MalformedRegistry)?.parent()
+            .ok_or(Error::MalformedRegistry)?.join("Plugins");
+
         Ok(RobloxStudio {
-            root: content_folder_path
-                .parent()
-                .ok_or(Error::MalformedRegistry)?
-                .to_owned(),
+            root: root.to_owned(),
+            plugins: plugins.to_owned(),
         })
     }
 
@@ -86,5 +92,11 @@ impl RobloxStudio {
     #[inline]
     pub fn built_in_plugins_path(&self) -> PathBuf {
         self.root.join("BuiltInPlugins")
+    }
+
+    #[must_use]
+    #[inline]
+    pub fn plugins_path(&self) -> PathBuf {
+        self.plugins.to_owned()
     }
 }
