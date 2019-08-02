@@ -64,7 +64,35 @@ impl RobloxStudio {
         })
     }
 
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(target_os = "macos")]
+    pub fn locate() -> Result<RobloxStudio> {
+        let roblox_folder = PathBuf::from("/Applications").join("RobloxStudio.app");
+
+        if roblox_folder.exists() {
+            Some(roblox_folder)
+        } else {
+            if let Some(home_folder) = env::home_dir() {
+                let user_roblox_folder = home_folder.join("RobloxStudio.app");
+
+                if user_roblox_folder.exists() {
+                    Some(user_roblox_folder)
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        }
+
+        Ok(RobloxStudio {
+            root: content_folder_path
+                .parent()
+                .ok_or(Error::MalformedRegistry)?
+                .to_owned(),
+        })
+    }
+
+    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
     #[inline]
     pub fn locate() -> Result<RobloxStudio> {
         Err(Error::PlatformNotSupported)
