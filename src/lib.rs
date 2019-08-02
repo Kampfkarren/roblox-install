@@ -62,7 +62,7 @@ impl RobloxStudio {
             .ok_or(Error::MalformedRegistry)?;
 
         Ok(RobloxStudio {
-            root,
+            root: root.to_path_buf(),
             exe: root.join("RobloxStudioBeta.exe"),
             built_in_plugins: root.join("BuiltInPlugins"),
         })
