@@ -39,6 +39,8 @@ impl std::error::Error for Error {
 #[must_use]
 pub struct RobloxStudio {
     root: PathBuf,
+    exe: PathBuf,
+    built_in_plugins: PathBuf,
 }
 
 impl RobloxStudio {
@@ -56,39 +58,27 @@ impl RobloxStudio {
 
         let content_folder_path = PathBuf::from(content_folder_value);
 
+        let root = content_folder_path.parent()
+            .ok_or(Error::MalformedRegistry)?;
+
         Ok(RobloxStudio {
-            root: content_folder_path
-                .parent()
-                .ok_or(Error::MalformedRegistry)?
-                .to_owned(),
+            root,
+            exe: root.join("RobloxStudioBeta.exe"),
+            built_in_plugins: root.join("BuiltInPlugins"),
         })
     }
 
     #[cfg(target_os = "macos")]
     pub fn locate() -> Result<RobloxStudio> {
-        let roblox_folder = PathBuf::from("/Applications").join("RobloxStudio.app");
-
-        if roblox_folder.exists() {
-            Some(roblox_folder)
-        } else {
-            if let Some(home_folder) = env::home_dir() {
-                let user_roblox_folder = home_folder.join("RobloxStudio.app");
-
-                if user_roblox_folder.exists() {
-                    Some(user_roblox_folder)
-                } else {
-                    None
-                }
-            } else {
-                None
-            }
-        }
+        let root = PathBuf::from("/Applications").join("RobloxStudio.app");
+        let contents = root.join("Contents");
+        let exe = contents.join("MacOS").join("RobloxStudio");
+        let built_in_plugins = contents.join("Resources").join("BuiltInPlugins");
 
         Ok(RobloxStudio {
-            root: content_folder_path
-                .parent()
-                .ok_or(Error::MalformedRegistry)?
-                .to_owned(),
+            root,
+            exe,
+            built_in_plugins,
         })
     }
 
@@ -107,12 +97,12 @@ impl RobloxStudio {
     #[must_use]
     #[inline]
     pub fn exe_path(&self) -> PathBuf {
-        self.root.join("RobloxStudioBeta.exe")
+        self.exe.to_owned()
     }
 
     #[must_use]
     #[inline]
     pub fn built_in_plugins_path(&self) -> PathBuf {
-        self.root.join("BuiltInPlugins")
+        self.built_in_plugins.to_owned()
     }
 }
