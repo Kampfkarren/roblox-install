@@ -43,10 +43,10 @@ impl std::error::Error for Error {
 #[derive(Debug)]
 #[must_use]
 pub struct RobloxStudio {
-    root: PathBuf,
-    exe: PathBuf,
+    application: PathBuf,
     built_in_plugins: PathBuf,
     plugins: PathBuf,
+    root: PathBuf,
 }
 
 impl RobloxStudio {
@@ -76,10 +76,10 @@ impl RobloxStudio {
             .join("Plugins");
 
         Ok(RobloxStudio {
-            root: root.to_path_buf(),
-            exe: root.join("RobloxStudioBeta.exe"),
+            application: root.join("RobloxStudioBeta.exe"),
             built_in_plugins: root.join("BuiltInPlugins"),
             plugins: plugins.to_owned(),
+            root: root.to_path_buf(),
         })
     }
 
@@ -93,10 +93,10 @@ impl RobloxStudio {
         let plugins = documents.join("Roblox").join("Plugins");
 
         Ok(RobloxStudio {
-            root,
-            exe,
+            application,
             built_in_plugins,
             plugins,
+            root,
         })
     }
 
@@ -106,6 +106,11 @@ impl RobloxStudio {
         Err(Error::PlatformNotSupported)
     }
 
+    #[deprecated(
+        since = "0.2.0",
+        note = "The contents of the studio directory are inconsistent across platforms. \
+        Please use a dedicated method (like application_path) or file a feature request if one does not exist."
+    )]
     #[must_use]
     #[inline]
     pub fn root_path(&self) -> &Path {
@@ -114,19 +119,26 @@ impl RobloxStudio {
 
     #[must_use]
     #[inline]
+    pub fn application_path(&self) -> &Path {
+        &self.application
+    }
+
+    #[deprecated(since = "0.2.0", note = "Please use application_path instead.")]
+    #[must_use]
+    #[inline]
     pub fn exe_path(&self) -> PathBuf {
-        self.exe.to_owned()
+        self.application_path().to_owned()
     }
 
     #[must_use]
     #[inline]
-    pub fn built_in_plugins_path(&self) -> PathBuf {
-        self.built_in_plugins.to_owned()
+    pub fn built_in_plugins_path(&self) -> &Path {
+        &self.built_in_plugins
     }
 
     #[must_use]
     #[inline]
-    pub fn plugins_path(&self) -> PathBuf {
-        self.plugins.to_owned()
+    pub fn plugins_path(&self) -> &Path {
+        &self.plugins
     }
 }
