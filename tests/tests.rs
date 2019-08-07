@@ -13,6 +13,11 @@ fn test_windows() {
         .contains("BuiltInPlugins"));
 
     assert!(studio
+        .plugins_path()
+        .to_string_lossy()
+        .contains("Plugins"));
+
+    assert!(studio
         .exe_path()
         .to_string_lossy()
         .contains("RobloxStudioBeta.exe"));
