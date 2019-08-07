@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use roblox_install::RobloxStudio;
 
 #[cfg(target_os = "windows")]
@@ -15,7 +17,7 @@ fn test_windows() {
     assert!(studio.plugins_path().to_string_lossy().contains("Plugins"));
 
     assert!(studio
-        .exe_path()
+        .application_path()
         .to_string_lossy()
         .contains("RobloxStudioBeta.exe"));
 }
@@ -37,5 +39,8 @@ fn test_macos() {
 
     assert!(studio.plugins_path().to_string_lossy().contains("Plugins"));
 
-    assert!(studio.exe_path().to_string_lossy().contains("RobloxStudio"));
+    assert!(studio
+        .application_path()
+        .to_string_lossy()
+        .contains("RobloxStudio"));
 }
