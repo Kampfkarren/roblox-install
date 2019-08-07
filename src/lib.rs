@@ -3,6 +3,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use dirs::document_dir;
+
 #[cfg(target_os = "windows")]
 use winreg::RegKey;
 
@@ -10,6 +12,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug)]
 pub enum Error {
+    DocumentsDirectoryNotFound,
     MalformedRegistry,
     PlatformNotSupported,
     RegistryError(io::Error),
@@ -18,6 +21,7 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            Error::DocumentsDirectoryNotFound => write!(formatter, "Couldn't find Documents directory"),
             Error::MalformedRegistry => write!(formatter, "The values of the registry keys used to find Roblox are malformed, maybe your Roblox installation is corrupt?"),
             Error::PlatformNotSupported => write!(formatter, "Your platform is not currently supported"),
             Error::RegistryError(error) => write!(formatter, "Couldn't find registry keys, Roblox might not be installed. ({})", error),
@@ -39,6 +43,8 @@ impl std::error::Error for Error {
 #[must_use]
 pub struct RobloxStudio {
     root: PathBuf,
+    exe: PathBuf,
+    built_in_plugins: PathBuf,
     plugins: PathBuf,
 }
 
@@ -65,12 +71,31 @@ impl RobloxStudio {
             .ok_or(Error::MalformedRegistry)?.join("Plugins");
 
         Ok(RobloxStudio {
-            root: root.to_owned(),
+            root: root.to_path_buf(),
+            exe: root.join("RobloxStudioBeta.exe"),
+            built_in_plugins: root.join("BuiltInPlugins"),
             plugins: plugins.to_owned(),
         })
     }
 
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(target_os = "macos")]
+    pub fn locate() -> Result<RobloxStudio> {
+        let root = PathBuf::from("/Applications").join("RobloxStudio.app");
+        let contents = root.join("Contents");
+        let exe = contents.join("MacOS").join("RobloxStudio");
+        let built_in_plugins = contents.join("Resources").join("BuiltInPlugins");
+        let documents = document_dir().ok_or(Error::DocumentsDirectoryNotFound)?;
+        let plugins = documents.join("Roblox").join("Plugins");
+
+        Ok(RobloxStudio {
+            root,
+            exe,
+            built_in_plugins,
+            plugins,
+        })
+    }
+
+    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
     #[inline]
     pub fn locate() -> Result<RobloxStudio> {
         Err(Error::PlatformNotSupported)
@@ -85,13 +110,13 @@ impl RobloxStudio {
     #[must_use]
     #[inline]
     pub fn exe_path(&self) -> PathBuf {
-        self.root.join("RobloxStudioBeta.exe")
+        self.exe.to_owned()
     }
 
     #[must_use]
     #[inline]
     pub fn built_in_plugins_path(&self) -> PathBuf {
-        self.root.join("BuiltInPlugins")
+        self.built_in_plugins.to_owned()
     }
 
     #[must_use]
