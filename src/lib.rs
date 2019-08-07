@@ -3,6 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[cfg(target_os = "macos")]
 use dirs::document_dir;
 
 #[cfg(target_os = "windows")]
