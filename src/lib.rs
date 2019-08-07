@@ -64,12 +64,16 @@ impl RobloxStudio {
 
         let content_folder_path = PathBuf::from(content_folder_value);
 
-        let root = content_folder_path.parent()
+        let root = content_folder_path
+            .parent()
             .ok_or(Error::MalformedRegistry)?;
 
-        let plugins = root.parent()
-            .ok_or(Error::MalformedRegistry)?.parent()
-            .ok_or(Error::MalformedRegistry)?.join("Plugins");
+        let plugins = root
+            .parent()
+            .ok_or(Error::MalformedRegistry)?
+            .parent()
+            .ok_or(Error::MalformedRegistry)?
+            .join("Plugins");
 
         Ok(RobloxStudio {
             root: root.to_path_buf(),

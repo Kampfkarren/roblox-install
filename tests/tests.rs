@@ -12,10 +12,7 @@ fn test_windows() {
         .to_string_lossy()
         .contains("BuiltInPlugins"));
 
-    assert!(studio
-        .plugins_path()
-        .to_string_lossy()
-        .contains("Plugins"));
+    assert!(studio.plugins_path().to_string_lossy().contains("Plugins"));
 
     assert!(studio
         .exe_path()
@@ -28,20 +25,17 @@ fn test_windows() {
 fn test_macos() {
     let studio = RobloxStudio::locate().unwrap();
 
-    assert!(studio.root_path().to_string_lossy().contains("RobloxStudio.app"));
+    assert!(studio
+        .root_path()
+        .to_string_lossy()
+        .contains("RobloxStudio.app"));
 
     assert!(studio
         .built_in_plugins_path()
         .to_string_lossy()
         .contains("BuiltInPlugins"));
 
-    assert!(studio
-        .plugins_path()
-        .to_string_lossy()
-        .contains("Plugins"));
+    assert!(studio.plugins_path().to_string_lossy().contains("Plugins"));
 
-    assert!(studio
-        .exe_path()
-        .to_string_lossy()
-        .contains("RobloxStudio"));
+    assert!(studio.exe_path().to_string_lossy().contains("RobloxStudio"));
 }
