@@ -87,7 +87,7 @@ impl RobloxStudio {
     pub fn locate() -> Result<RobloxStudio> {
         let root = PathBuf::from("/Applications").join("RobloxStudio.app");
         let contents = root.join("Contents");
-        let exe = contents.join("MacOS").join("RobloxStudio");
+        let application = contents.join("MacOS").join("RobloxStudio");
         let built_in_plugins = contents.join("Resources").join("BuiltInPlugins");
         let documents = document_dir().ok_or(Error::DocumentsDirectoryNotFound)?;
         let plugins = documents.join("Roblox").join("Plugins");
