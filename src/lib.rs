@@ -3,8 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-#[cfg(target_os = "macos")]
-use dirs::document_dir;
+use dirs;
 
 #[cfg(target_os = "windows")]
 use winreg::RegKey;
@@ -16,6 +15,7 @@ pub enum Error {
     DocumentsDirectoryNotFound,
     MalformedRegistry,
     PlatformNotSupported,
+    PluginsDirectoryNotFound,
     RegistryError(io::Error),
 }
 
@@ -23,6 +23,7 @@ impl fmt::Display for Error {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Error::DocumentsDirectoryNotFound => write!(formatter, "Couldn't find Documents directory"),
+            Error::PluginsDirectoryNotFound => write!(formatter, "Couldn't find Plugins directory"),
             Error::MalformedRegistry => write!(formatter, "The values of the registry keys used to find Roblox are malformed, maybe your Roblox installation is corrupt?"),
             Error::PlatformNotSupported => write!(formatter, "Your platform is not currently supported"),
             Error::RegistryError(error) => write!(formatter, "Couldn't find registry keys, Roblox might not be installed. ({})", error),
@@ -68,17 +69,13 @@ impl RobloxStudio {
             .parent()
             .ok_or(Error::MalformedRegistry)?;
 
-        let plugins = root
-            .parent()
-            .ok_or(Error::MalformedRegistry)?
-            .parent()
-            .ok_or(Error::MalformedRegistry)?
-            .join("Plugins");
+        let user_dir = dirs::home_dir().ok_or(Error::PluginsDirectoryNotFound)?;
+        let plugin_dir = user_dir.join("AppData").join("Local").join("Roblox").join("Plugins");
 
         Ok(RobloxStudio {
             application: root.join("RobloxStudioBeta.exe"),
             built_in_plugins: root.join("BuiltInPlugins"),
-            plugins: plugins.to_owned(),
+            plugins: plugin_dir,
             root: root.to_path_buf(),
         })
     }
@@ -89,7 +86,7 @@ impl RobloxStudio {
         let contents = root.join("Contents");
         let application = contents.join("MacOS").join("RobloxStudio");
         let built_in_plugins = contents.join("Resources").join("BuiltInPlugins");
-        let documents = document_dir().ok_or(Error::DocumentsDirectoryNotFound)?;
+        let documents = dirs::document_dir().ok_or(Error::DocumentsDirectoryNotFound)?;
         let plugins = documents.join("Roblox").join("Plugins");
 
         Ok(RobloxStudio {
