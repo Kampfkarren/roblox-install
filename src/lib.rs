@@ -70,7 +70,11 @@ impl RobloxStudio {
             .ok_or(Error::MalformedRegistry)?;
 
         let user_dir = dirs::home_dir().ok_or(Error::PluginsDirectoryNotFound)?;
-        let plugin_dir = user_dir.join("AppData").join("Local").join("Roblox").join("Plugins");
+        let plugin_dir = user_dir
+            .join("AppData")
+            .join("Local")
+            .join("Roblox")
+            .join("Plugins");
 
         Ok(RobloxStudio {
             application: root.join("RobloxStudioBeta.exe"),
