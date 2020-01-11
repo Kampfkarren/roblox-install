@@ -3,8 +3,6 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use dirs;
-
 #[cfg(target_os = "windows")]
 use winreg::RegKey;
 
