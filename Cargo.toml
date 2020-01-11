@@ -7,6 +7,7 @@ license = "MPL-2.0"
 repository = "https://github.com/Kampfkarren/roblox-install"
 keywords = ["roblox"]
 edition = "2018"
+readme = "README.md"
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.6"
