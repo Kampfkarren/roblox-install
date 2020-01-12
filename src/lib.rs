@@ -42,6 +42,7 @@ impl std::error::Error for Error {
 #[derive(Debug)]
 #[must_use]
 pub struct RobloxStudio {
+    content: PathBuf,
     application: PathBuf,
     built_in_plugins: PathBuf,
     plugins: PathBuf,
@@ -65,16 +66,22 @@ impl RobloxStudio {
 
         let root = content_folder_path
             .parent()
-            .ok_or(Error::MalformedRegistry)?;
+            .ok_or(Error::MalformedRegistry)?
+            .to_path_buf();
 
         let user_dir = dirs::home_dir().ok_or(Error::PluginsDirectoryNotFound)?;
-        let plugin_dir = user_dir.join("AppData").join("Local").join("Roblox").join("Plugins");
+        let plugin_dir = user_dir
+            .join("AppData")
+            .join("Local")
+            .join("Roblox")
+            .join("Plugins");
 
         Ok(RobloxStudio {
+            content: content_folder_path,
             application: root.join("RobloxStudioBeta.exe"),
             built_in_plugins: root.join("BuiltInPlugins"),
             plugins: plugin_dir,
-            root: root.to_path_buf(),
+            root,
         })
     }
 
@@ -86,8 +93,10 @@ impl RobloxStudio {
         let built_in_plugins = contents.join("Resources").join("BuiltInPlugins");
         let documents = dirs::document_dir().ok_or(Error::DocumentsDirectoryNotFound)?;
         let plugins = documents.join("Roblox").join("Plugins");
+        let content = contents.join("Resources").join("content");
 
         Ok(RobloxStudio {
+            content,
             application,
             built_in_plugins,
             plugins,
@@ -116,6 +125,12 @@ impl RobloxStudio {
     #[inline]
     pub fn application_path(&self) -> &Path {
         &self.application
+    }
+
+    #[must_use]
+    #[inline]
+    pub fn content_path(&self) -> &Path {
+        &self.content
     }
 
     #[deprecated(since = "0.2.0", note = "Please use application_path instead.")]

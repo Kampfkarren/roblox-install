@@ -1,5 +1,7 @@
 #![allow(deprecated)]
 
+use std::fs;
+
 use roblox_install::RobloxStudio;
 
 #[cfg(target_os = "windows")]
@@ -20,6 +22,11 @@ fn test_windows() {
         .application_path()
         .to_string_lossy()
         .contains("RobloxStudioBeta.exe"));
+
+    let content = studio.content_path();
+    let meta = fs::metadata(&content).unwrap();
+    assert!(meta.is_dir());
+    assert!(content.to_string_lossy().contains("content"));
 }
 
 #[cfg(target_os = "macos")]
@@ -43,4 +50,9 @@ fn test_macos() {
         .application_path()
         .to_string_lossy()
         .contains("RobloxStudio"));
+
+    let content = studio.content_path();
+    let meta = fs::metadata(&content).unwrap();
+    assert!(meta.is_dir());
+    assert!(content.to_string_lossy().contains("content"));
 }
