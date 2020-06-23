@@ -1,6 +1,6 @@
 # roblox-install Changelog
 
-## Unreleased Changes
+## 0.3.0
 * Added `RobloxStudio::content_path`, returning the path to the `content` folder.
 
 ## 0.2.2
