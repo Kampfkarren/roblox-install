@@ -111,6 +111,7 @@ impl RobloxStudio {
         })
     }
 
+    #[cfg(not(target_os = "macos"))]
     fn locate_plugins_on_windows() -> Result<PathBuf> {
         let mut plugin_dir = dirs::home_dir().ok_or(Error::PluginsDirectoryNotFound)?;
         plugin_dir.push("AppData");
@@ -138,6 +139,7 @@ impl RobloxStudio {
         Self::locate_from_windows_directory(root)
     }
 
+    #[cfg(not(target_os = "macos"))]
     fn locate_from_windows_directory(root: PathBuf) -> Result<RobloxStudio> {
         let content_folder_path = root.join("content");
         let plugins = Self::locate_plugins_on_windows()?;
