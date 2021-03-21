@@ -111,7 +111,6 @@ impl RobloxStudio {
         })
     }
 
-    #[cfg(target_os = "windows")]
     fn locate_plugins_on_windows() -> Result<PathBuf> {
         let mut plugin_dir = dirs::home_dir().ok_or(Error::PluginsDirectoryNotFound)?;
         plugin_dir.push("AppData");
@@ -251,20 +250,21 @@ impl RobloxStudio {
     }
 
     fn locate_from_env() -> Option<Result<RobloxStudio>> {
-        env::var(ROBLOX_STUDIO_PATH_VARIABLE)
-            .ok()
-            .map(|value| {
-                let path: PathBuf = value.parse()
-                    .map_err(|error| {
-                        Error::EnvironmentVariableError(
-                            format!(
-                                "could not convert environment variable `{}` to path ({})",
-                                ROBLOX_STUDIO_PATH_VARIABLE,
-                                error,
-                            )
-                        )
-                    })?;
-                Self::locate_from_directory(path)
+        let variable_value = env::var(ROBLOX_STUDIO_PATH_VARIABLE)
+            .ok()?;
+
+        let result = variable_value.parse()
+            .map_err(|error| {
+                Error::EnvironmentVariableError(
+                    format!(
+                        "could not convert environment variable `{}` to path ({})",
+                        ROBLOX_STUDIO_PATH_VARIABLE,
+                        error,
+                    )
+                )
             })
+            .and_then(|path: PathBuf| Self::locate_from_directory(path));
+
+        Some(result)
     }
 }
