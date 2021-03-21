@@ -11,17 +11,17 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v1
-    - name: Run tests
-      run: cargo test
+    - name: Run check
+      run: cargo check
   test_macos:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v1
-    - name: Run tests
-      run: cargo test
+    - name: Run check
+      run: cargo check
   test_ubuntu:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - name: Run tests
-      run: cargo test
+    - name: Run check
+      run: cargo check
