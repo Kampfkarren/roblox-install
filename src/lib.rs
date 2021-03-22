@@ -1,69 +1,43 @@
 use std::{
-    env, fmt, fs, io,
+    env, fs, io,
     path::{Path, PathBuf},
 };
+
+use thiserror::Error;
 
 #[cfg(target_os = "windows")]
 use winreg::RegKey;
 
+/// A wrapper for [`Result`](https://doc.rust-lang.org/std/result/enum.Result.html) that
+/// contains [`Error`] in the `Err` type.
 pub type Result<T> = std::result::Result<T, Error>;
 
-const ROBLOX_STUDIO_PATH_VARIABLE: &'static str = "ROBLOX_STUDIO_PATH";
+const ROBLOX_STUDIO_PATH_VARIABLE: &str = "ROBLOX_STUDIO_PATH";
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 #[non_exhaustive]
+/// Everything that can go wrong while using roblox-install.
 pub enum Error {
+    #[error("Couldn't find Documents directory")]
     DocumentsDirectoryNotFound,
+
+    #[error("The values of the registry keys used to find Roblox are malformed, maybe your Roblox installation is corrupt?")]
     MalformedRegistry,
+
+    #[error("Your platform is not currently supported")]
     PlatformNotSupported,
+
+    #[error("Couldn't find Plugins directory")]
     PluginsDirectoryNotFound,
-    RegistryError(io::Error),
+
+    #[error("Couldn't find registry keys, Roblox might not be installed.")]
+    RegistryError(#[source] io::Error),
+
+    #[error("Environment variable misconfigured: {0}")]
     EnvironmentVariableError(String),
+
+    #[error("Couldn't find Roblox Studio")]
     NotInstalled,
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Error::DocumentsDirectoryNotFound => write!(
-                formatter,
-                "Couldn't find Documents directory",
-            ),
-            Error::PluginsDirectoryNotFound => write!(
-                formatter,
-                "Couldn't find Plugins directory",
-            ),
-            Error::MalformedRegistry => write!(
-                formatter,
-                "The values of the registry keys used to find Roblox are malformed, maybe your Roblox installation is corrupt?",
-            ),
-            Error::PlatformNotSupported => write!(
-                formatter,
-                "Your platform is not currently supported",
-            ),
-            Error::RegistryError(error) => write!(
-                formatter,
-                "Couldn't find registry keys, Roblox might not be installed. ({})",
-                error,
-            ),
-            Error::EnvironmentVariableError(reason) => write!(
-                formatter,
-                "environment variable misconfigured: {}",
-                reason,
-            ),
-            Error::NotInstalled => write!(formatter, "Couldn't find Roblox Studio"),
-        }
-    }
-}
-
-impl std::error::Error for Error {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        if let Error::RegistryError(error) = self {
-            Some(error)
-        } else {
-            None
-        }
-    }
 }
 
 #[derive(Debug)]
@@ -274,7 +248,7 @@ impl RobloxStudio {
                     ROBLOX_STUDIO_PATH_VARIABLE, error,
                 ))
             })
-            .and_then(|path: PathBuf| Self::locate_from_directory(path));
+            .and_then(Self::locate_from_directory);
 
         Some(result)
     }
