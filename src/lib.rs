@@ -86,7 +86,7 @@ impl RobloxStudio {
     /// can also point to the Roblox directory in AppData (`$APPDATA\Local\Roblox`)
     /// and it will find the latest version by itself.
     pub fn locate() -> Result<RobloxStudio> {
-        Self::locate_from_env().unwrap_or_else(|| Self::locate_target_specific())
+        Self::locate_from_env().unwrap_or_else(Self::locate_target_specific)
     }
 
     #[cfg(target_os = "windows")]
