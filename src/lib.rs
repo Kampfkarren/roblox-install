@@ -111,7 +111,7 @@ impl RobloxStudio {
         })
     }
 
-    #[cfg(target_os = "windows")]
+    #[cfg(not(target_os = "macos"))]
     fn locate_plugins_on_windows() -> Result<PathBuf> {
         let mut plugin_dir = dirs::home_dir().ok_or(Error::PluginsDirectoryNotFound)?;
         plugin_dir.push("AppData");
@@ -139,6 +139,7 @@ impl RobloxStudio {
         Self::locate_from_windows_directory(root)
     }
 
+    #[cfg(not(target_os = "macos"))]
     fn locate_from_windows_directory(root: PathBuf) -> Result<RobloxStudio> {
         let content_folder_path = root.join("content");
         let plugins = Self::locate_plugins_on_windows()?;
@@ -251,20 +252,21 @@ impl RobloxStudio {
     }
 
     fn locate_from_env() -> Option<Result<RobloxStudio>> {
-        env::var(ROBLOX_STUDIO_PATH_VARIABLE)
-            .ok()
-            .map(|value| {
-                let path: PathBuf = value.parse()
-                    .map_err(|error| {
-                        Error::EnvironmentVariableError(
-                            format!(
-                                "could not convert environment variable `{}` to path ({})",
-                                ROBLOX_STUDIO_PATH_VARIABLE,
-                                error,
-                            )
-                        )
-                    })?;
-                Self::locate_from_directory(path)
+        let variable_value = env::var(ROBLOX_STUDIO_PATH_VARIABLE)
+            .ok()?;
+
+        let result = variable_value.parse()
+            .map_err(|error| {
+                Error::EnvironmentVariableError(
+                    format!(
+                        "could not convert environment variable `{}` to path ({})",
+                        ROBLOX_STUDIO_PATH_VARIABLE,
+                        error,
+                    )
+                )
             })
+            .and_then(|path: PathBuf| Self::locate_from_directory(path));
+
+        Some(result)
     }
 }
