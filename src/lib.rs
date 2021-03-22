@@ -86,8 +86,7 @@ impl RobloxStudio {
     /// can also point to the Roblox directory in AppData (`$APPDATA\Local\Roblox`)
     /// and it will find the latest version by itself.
     pub fn locate() -> Result<RobloxStudio> {
-        Self::locate_from_env()
-            .unwrap_or_else(|| Self::locate_target_specific())
+        Self::locate_from_env().unwrap_or_else(|| Self::locate_target_specific())
     }
 
     #[cfg(target_os = "windows")]
@@ -214,8 +213,7 @@ impl RobloxStudio {
     fn locate_from_directory(root: PathBuf) -> Result<RobloxStudio> {
         // for users running WSL, we need to find the Roblox Windows installation
         // even if we're not on Windows
-        Self::locate_from_windows_directory(root)
-            .map_err(|_| Error::PlatformNotSupported)
+        Self::locate_from_windows_directory(root).map_err(|_| Error::PlatformNotSupported)
     }
 
     #[deprecated(
@@ -266,18 +264,15 @@ impl RobloxStudio {
     }
 
     fn locate_from_env() -> Option<Result<RobloxStudio>> {
-        let variable_value = env::var(ROBLOX_STUDIO_PATH_VARIABLE)
-            .ok()?;
+        let variable_value = env::var(ROBLOX_STUDIO_PATH_VARIABLE).ok()?;
 
-        let result = variable_value.parse()
+        let result = variable_value
+            .parse()
             .map_err(|error| {
-                Error::EnvironmentVariableError(
-                    format!(
-                        "could not convert environment variable `{}` to path ({})",
-                        ROBLOX_STUDIO_PATH_VARIABLE,
-                        error,
-                    )
-                )
+                Error::EnvironmentVariableError(format!(
+                    "could not convert environment variable `{}` to path ({})",
+                    ROBLOX_STUDIO_PATH_VARIABLE, error,
+                ))
             })
             .and_then(|path: PathBuf| Self::locate_from_directory(path));
 
