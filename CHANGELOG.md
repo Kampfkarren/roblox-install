@@ -1,7 +1,6 @@
 # roblox-install Changelog
 
-## Unreleased
-
+## 1.0.0
 * Added option to install from an environment variable [(#26)](https://github.com/Kampfkarren/roblox-install/issues/26)
 
 ## 0.3.0
