@@ -11,6 +11,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 const ROBLOX_STUDIO_PATH_VARIABLE: &'static str = "ROBLOX_STUDIO_PATH";
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum Error {
     DocumentsDirectoryNotFound,
     MalformedRegistry,
@@ -76,6 +77,14 @@ pub struct RobloxStudio {
 }
 
 impl RobloxStudio {
+    /// Attempts to find a Roblox Studio installation. It will start by looking up
+    /// into the environment variable `ROBLOX_STUDIO_PATH`. If the variable is not
+    /// defined, it will find the usual installation on Windows and MacOS.
+    ///
+    /// On Windows (or WSL), the environment variable can point to a specific version (where
+    /// the `RobloxStudioBeta.exe` file and `content` directory are located) or it
+    /// can also point to the Roblox directory in AppData (`$APPDATA\Local\Roblox`)
+    /// and it will find the latest version by itself.
     pub fn locate() -> Result<RobloxStudio> {
         Self::locate_from_env()
             .unwrap_or_else(|| Self::locate_target_specific())
@@ -222,12 +231,14 @@ impl RobloxStudio {
 
     #[must_use]
     #[inline]
+    /// Path to the Roblox Studio executable
     pub fn application_path(&self) -> &Path {
         &self.application
     }
 
     #[must_use]
     #[inline]
+    /// Path to the content directory
     pub fn content_path(&self) -> &Path {
         &self.content
     }
@@ -241,12 +252,15 @@ impl RobloxStudio {
 
     #[must_use]
     #[inline]
+    /// Path to built-in plugins directory
     pub fn built_in_plugins_path(&self) -> &Path {
         &self.built_in_plugins
     }
 
     #[must_use]
     #[inline]
+    /// Path to the user's plugin directory. This directory may NOT exist if the Roblox Studio
+    /// user has never opened it from Roblox Studio `Plugins Folder` button.
     pub fn plugins_path(&self) -> &Path {
         &self.plugins
     }
