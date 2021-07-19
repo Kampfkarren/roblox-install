@@ -1,6 +1,10 @@
 # roblox-install Changelog
 
 ## 1.0.0
+* Added default location under Linux for Grapejuice installs
+* Fixed Linux Roblox Plugin path
+
+## 1.0.0
 * Added option to install from an environment variable [(#26)](https://github.com/Kampfkarren/roblox-install/issues/26)
 
 ## 0.3.0
