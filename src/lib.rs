@@ -3,10 +3,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use thiserror::Error;
-
 #[cfg(target_os = "windows")]
 use winreg::RegKey;
+
+use thiserror::Error;
 
 /// A wrapper for [`Result`](https://doc.rust-lang.org/std/result/enum.Result.html) that
 /// contains [`Error`] in the `Err` type.
@@ -93,14 +93,15 @@ impl RobloxStudio {
         })
     }
 
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(target_os = "windows")]
     fn locate_plugins_on_windows() -> Result<PathBuf> {
-        let mut plugin_dir = dirs::home_dir().ok_or(Error::PluginsDirectoryNotFound)?;
-        plugin_dir.push("AppData");
-        plugin_dir.push("Local");
-        plugin_dir.push("Roblox");
-        plugin_dir.push("Plugins");
-        Ok(plugin_dir)
+        Ok(
+            dirs::home_dir().ok_or(Error::PluginsDirectoryNotFound)?
+                .join("AppData")
+                .join("Local")
+                .join("Roblox")
+                .join("Plugins")
+        )
     }
 
     #[cfg(target_os = "macos")]
@@ -110,58 +111,33 @@ impl RobloxStudio {
         Self::locate_from_directory(root)
     }
 
-    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
     #[inline]
     fn locate_target_specific() -> Result<RobloxStudio> {
         Err(Error::PlatformNotSupported)
     }
 
+    /// Assumes you are using grapejuice
+    #[cfg(target_os = "linux")]
+    fn locate_target_specific() -> Result<RobloxStudio> {
+        let grapejuice_path =
+            PathBuf::from(env::var("HOME").map_err(|_| Error::PlatformNotSupported)?)
+                .join(".local")
+                .join("share")
+                .join("grapejuice")
+                .join("wineprefix")
+                .join("drive_c")
+                .join("users")
+                .join(env::var("USER").map_err(|_| Error::PlatformNotSupported)?)
+                .join("AppData")
+                .join("Local")
+                .join("Roblox");
+        Self::locate_from_directory(grapejuice_path)
+    }
+
     #[cfg(target_os = "windows")]
     fn locate_from_directory(root: PathBuf) -> Result<RobloxStudio> {
         Self::locate_from_windows_directory(root)
-    }
-
-    #[cfg(not(target_os = "macos"))]
-    fn locate_from_windows_directory(root: PathBuf) -> Result<RobloxStudio> {
-        let content_folder_path = root.join("content");
-        let plugins = Self::locate_plugins_on_windows()?;
-
-        if content_folder_path.is_dir() {
-            Ok(RobloxStudio {
-                content: content_folder_path,
-                application: root.join("RobloxStudioBeta.exe"),
-                built_in_plugins: root.join("BuiltInPlugins"),
-                plugins,
-                root,
-            })
-        } else {
-            let versions = root.join("Versions");
-
-            if versions.is_dir() {
-                fs::read_dir(&versions)
-                    .map_err(|_| Error::NotInstalled)?
-                    .filter_map(|entry| entry.ok())
-                    .find_map(|entry| {
-                        let version = entry.path();
-                        let application = version.join("RobloxStudioBeta.exe");
-
-                        if application.is_file() {
-                            Some(RobloxStudio {
-                                content: version.join("content"),
-                                application,
-                                built_in_plugins: version.join("BuiltInPlugins"),
-                                plugins: plugins.clone(),
-                                root: version.to_owned(),
-                            })
-                        } else {
-                            None
-                        }
-                    })
-                    .ok_or(Error::NotInstalled)
-            } else {
-                Err(Error::NotInstalled)
-            }
-        }
     }
 
     #[cfg(target_os = "macos")]
@@ -188,6 +164,48 @@ impl RobloxStudio {
         // for users running WSL, we need to find the Roblox Windows installation
         // even if we're not on Windows
         Self::locate_from_windows_directory(root).map_err(|_| Error::PlatformNotSupported)
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    fn locate_from_windows_directory(root: PathBuf) -> Result<RobloxStudio> {
+        let content_folder_path = root.join("content");
+
+        if content_folder_path.is_dir() {
+            Ok(RobloxStudio {
+                content: content_folder_path,
+                application: root.join("RobloxStudioBeta.exe"),
+                built_in_plugins: root.join("BuiltInPlugins"),
+                plugins: root.parent().unwrap_or(&root).join("Plugins"),
+                root,
+            })
+        } else {
+            let versions = root.join("Versions");
+
+            if versions.is_dir() {
+                fs::read_dir(&versions)
+                    .map_err(|_| Error::NotInstalled)?
+                    .filter_map(|entry| entry.ok())
+                    .find_map(|entry| {
+                        let version = entry.path();
+                        let application = version.join("RobloxStudioBeta.exe");
+
+                        if application.is_file() {
+                            Some(RobloxStudio {
+                                application,
+                                content: version.join("content"),
+                                built_in_plugins: version.join("BuiltInPlugins"),
+                                plugins: root.join("Plugins"),
+                                root: version.to_owned(),
+                            })
+                        } else {
+                            None
+                        }
+                    })
+                    .ok_or(Error::NotInstalled)
+            } else {
+                Err(Error::NotInstalled)
+            }
+        }
     }
 
     #[deprecated(
@@ -238,18 +256,17 @@ impl RobloxStudio {
     }
 
     fn locate_from_env() -> Option<Result<RobloxStudio>> {
-        let variable_value = env::var(ROBLOX_STUDIO_PATH_VARIABLE).ok()?;
-
-        let result = variable_value
-            .parse()
-            .map_err(|error| {
-                Error::EnvironmentVariableError(format!(
-                    "could not convert environment variable `{}` to path ({})",
-                    ROBLOX_STUDIO_PATH_VARIABLE, error,
-                ))
-            })
-            .and_then(Self::locate_from_directory);
-
-        Some(result)
+        Some(
+            env::var(ROBLOX_STUDIO_PATH_VARIABLE)
+                .ok()?
+                .parse()
+                .map_err(|error| {
+                    Error::EnvironmentVariableError(format!(
+                        "could not convert environment variable `{}` to path ({})",
+                        ROBLOX_STUDIO_PATH_VARIABLE, error,
+                    ))
+                })
+                .and_then(Self::locate_from_directory),
+        )
     }
 }
