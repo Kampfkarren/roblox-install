@@ -1,6 +1,7 @@
 use std::{
     env, fs, io,
     path::{Path, PathBuf},
+    process::Command,
 };
 
 use thiserror::Error;
@@ -38,6 +39,18 @@ pub enum Error {
 
     #[error("Couldn't find Roblox Studio")]
     NotInstalled,
+
+    #[error("Failed to detect WSL environment")]
+    WSLDetectionError,
+}
+
+fn is_wsl() -> bool {
+    if let Ok(output) = Command::new("uname").arg("-r").output() {
+        if let Ok(output_str) = String::from_utf8(output.stdout) {
+            return output_str.to_lowercase().contains("microsoft") || output_str.to_lowercase().contains("wsl");
+        }
+    }
+    false
 }
 
 #[derive(Debug)]
@@ -113,6 +126,23 @@ impl RobloxStudio {
     #[cfg(not(any(target_os = "windows", target_os = "macos")))]
     #[inline]
     fn locate_target_specific() -> Result<RobloxStudio> {
+        if is_wsl() {
+            // Default Windows Roblox installation path under WSL
+            let mut root = PathBuf::from("/mnt/c/Users");
+            
+            // Try to get the Windows username from the WSL environment
+            if let Ok(output) = Command::new("cmd.exe").args(&["/C", "echo %USERNAME%"]).output() {
+                if let Ok(username) = String::from_utf8(output.stdout) {
+                    let username = username.trim();
+                    root.push(username);
+                    root.push("AppData");
+                    root.push("Local");
+                    root.push("Roblox");
+                    
+                    return Self::locate_from_windows_directory(root);
+                }
+            }
+        }
         Err(Error::PlatformNotSupported)
     }
 
@@ -185,9 +215,11 @@ impl RobloxStudio {
     #[cfg(not(any(target_os = "windows", target_os = "macos")))]
     #[inline]
     fn locate_from_directory(root: PathBuf) -> Result<RobloxStudio> {
-        // for users running WSL, we need to find the Roblox Windows installation
-        // even if we're not on Windows
-        Self::locate_from_windows_directory(root).map_err(|_| Error::PlatformNotSupported)
+        if is_wsl() {
+            Self::locate_from_windows_directory(root)
+        } else {
+            Err(Error::PlatformNotSupported)
+        }
     }
 
     #[deprecated(
