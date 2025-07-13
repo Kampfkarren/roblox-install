@@ -138,24 +138,36 @@ impl RobloxStudio {
             let versions = root.join("Versions");
 
             if versions.is_dir() {
-                fs::read_dir(&versions)
+                let mut valid_versions: Vec<_> = fs::read_dir(&versions)
                     .map_err(|_| Error::NotInstalled)?
                     .filter_map(|entry| entry.ok())
-                    .find_map(|entry| {
+                    .filter_map(|entry| {
                         let version = entry.path();
                         let application = version.join("RobloxStudioBeta.exe");
 
                         if application.is_file() {
-                            Some(RobloxStudio {
-                                content: version.join("content"),
-                                application,
-                                built_in_plugins: version.join("BuiltInPlugins"),
-                                plugins: plugins.clone(),
-                                root: version.to_owned(),
-                            })
+                            let metadata = entry.metadata().ok()?;
+                            let modified = metadata.modified().ok()?;
+
+                            Some((version, modified))
                         } else {
                             None
                         }
+                    })
+                    .collect();
+
+                // Sort by most recent modification time
+                valid_versions.sort_by(|a, b| b.1.cmp(&a.1));
+
+                // Return the most recent version
+                valid_versions
+                    .first()
+                    .map(|(version, _)| RobloxStudio {
+                        content: version.join("content"),
+                        application: version.join("RobloxStudioBeta.exe"),
+                        built_in_plugins: version.join("BuiltInPlugins"),
+                        plugins: plugins.clone(),
+                        root: version.to_owned(),
                     })
                     .ok_or(Error::NotInstalled)
             } else {
