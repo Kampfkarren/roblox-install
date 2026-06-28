@@ -13,5 +13,14 @@ readme = "README.md"
 winreg = "0.6"
 
 [dependencies]
+clap = { version = "4.6.1", features = ["derive"], optional = true }
 dirs = "2.0.2"
 thiserror = "1.0.24"
+
+[[bin]]
+name = "roblox-install-cli"
+required-features = ["cli"]
+path = "src/bin.rs"
+
+[features]
+cli = ["clap"]
